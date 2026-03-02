@@ -7,6 +7,9 @@ const User = require('../models/User');
 const Shop = require('../models/Shop');
 const Order = require('../models/Order');
 
+// getUsersByRole function in controllers adminController.js
+const { getUsersByRole } = require('../controllers/adminController');
+
 // 🔹 Dashboard stats
 router.get('/dashboard', authMiddleware, roleMiddleware('admin'), async (req, res) => {
   try {
@@ -43,5 +46,10 @@ router.get('/orders', authMiddleware, roleMiddleware('admin'), async (req, res) 
   const orders = await Order.find().populate('buyer').populate('products.product');
   res.json(orders);
 });
+
+
+
+router.get('/users/role/:role', authMiddleware, roleMiddleware('admin'), getUsersByRole);
+
 
 module.exports = router;
