@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 
 const shopSchema = new mongoose.Schema({
-  name: String,
+  name: { type: String, required: true },
   description: String,
   logo: String,
-  approved: { type: Boolean, default: false },
+  status: { type: String, enum: ['pending','approved','blocked'], default: 'pending' },
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 });
 
