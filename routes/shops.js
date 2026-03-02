@@ -7,6 +7,29 @@ const Shop = require('../models/Shop');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 
+// 🔹 Create shop
+router.post('/', authMiddleware, roleMiddleware('shop'), async (req, res) => {
+  try {
+    // Vérifier si le shop existe déjà
+    const existingShop = await Shop.findOne({ owner: req.user.id });
+    if (existingShop) {
+      return res.status(400).json({ message: "Shop déjà existant" });
+    }
+
+    const newShop = new Shop({
+      ...req.body,
+      owner: req.user.id,
+      status: 'pending' // important pour validation admin
+    });
+
+    await newShop.save();
+
+    res.status(201).json(newShop);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 // 🔹 Profile shop
 router.put('/profile', authMiddleware, roleMiddleware('shop'), async (req, res) => {
   const shop = await Shop.findOneAndUpdate({ owner: req.user.id }, req.body, { new: true });

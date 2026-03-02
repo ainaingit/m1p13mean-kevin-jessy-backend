@@ -48,8 +48,6 @@ router.get('/orders', authMiddleware, roleMiddleware('admin'), async (req, res) 
 });
 
 
-
 router.get('/users/role/:role', authMiddleware, roleMiddleware('admin'), getUsersByRole);
-
 
 module.exports = router;
