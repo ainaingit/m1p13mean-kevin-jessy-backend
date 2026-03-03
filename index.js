@@ -15,7 +15,7 @@ app.use(express.json());
 // 🔹 CORS multi-origin
 // FRONTEND_URL dans .env (ex: http://localhost:4200)
 app.use(cors({
-  origin: [process.env.FRONTEND_URL, 'http://localhost:3000'], // Angular + Postman
+  origin: [process.env.FRONTEND_URL, 'https://mkwoos48ksgw4wog0ks4ko8o.mendrika.dev'], // Angular + Postman
   methods: ['GET','POST','PUT','DELETE']
 }));
 
