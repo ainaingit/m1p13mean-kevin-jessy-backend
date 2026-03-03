@@ -1,7 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middleware/auth');
-const roleMiddleware = require('../middleware/role');
 
 const User = require('../models/User');
 const Shop = require('../models/Shop');
@@ -11,43 +9,65 @@ const Order = require('../models/Order');
 const { getUsersByRole } = require('../controllers/adminController');
 
 // 🔹 Dashboard stats
-router.get('/dashboard', authMiddleware, roleMiddleware('admin'), async (req, res) => {
+router.get('/dashboard', async (req, res) => {
   try {
     const users = await User.countDocuments();
     const shops = await Shop.countDocuments();
     const orders = await Order.countDocuments();
     res.json({ users, shops, orders });
-  } catch(err) {
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 // 🔹 List users
-router.get('/users', authMiddleware, roleMiddleware('admin'), async (req, res) => {
-  const users = await User.find().select('-password');
-  res.json(users);
+router.get('/users', async (req, res) => {
+  try {
+    const users = await User.find().select('-password');
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // 🔹 List shops
-router.get('/shops', authMiddleware, roleMiddleware('admin'), async (req, res) => {
-  const shops = await Shop.find();
-  res.json(shops);
+router.get('/shops', async (req, res) => {
+  try {
+    const shops = await Shop.find();
+    res.json(shops);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // 🔹 Validate shop
-router.put('/shops/:id/validate', authMiddleware, roleMiddleware('admin'), async (req, res) => {
-  const { status } = req.body; // approved / blocked
-  const shop = await Shop.findByIdAndUpdate(req.params.id, { status }, { new: true });
-  res.json(shop);
+router.put('/shops/:id/validate', async (req, res) => {
+  try {
+    const { status } = req.body; // approved / blocked
+    const shop = await Shop.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+    res.json(shop);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // 🔹 List all orders
-router.get('/orders', authMiddleware, roleMiddleware('admin'), async (req, res) => {
-  const orders = await Order.find().populate('buyer').populate('products.product');
-  res.json(orders);
+router.get('/orders', async (req, res) => {
+  try {
+    const orders = await Order.find()
+      .populate('buyer')
+      .populate('products.product');
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-
-router.get('/users/role/:role', authMiddleware, roleMiddleware('admin'), getUsersByRole);
+// 🔹 Users by role
+router.get('/users/role/:role', getUsersByRole);
 
 module.exports = router;
