@@ -8,7 +8,7 @@ const Order = require('../models/Order');
 // Create shop
 router.post('/', async (req, res) => {
   try {
-    const { owner } = req.body; // ⚠️ maintenant on le prend du body
+    const { owner } = req.body; //  maintenant on le prend du body
 
     const existingShop = await Shop.findOne({ owner });
     if (existingShop) {
@@ -116,6 +116,15 @@ router.get('/orders/:ownerId', async (req, res) => {
 
     res.json(orders);
 
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/:id', async (req, res) => {
+  try {
+    const shop = await Shop.findById(req.params.id);
+    res.json(shop);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

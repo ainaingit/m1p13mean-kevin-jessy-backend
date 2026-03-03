@@ -63,4 +63,13 @@ router.get('/orders/:buyerId', async (req, res) => {
   }
 });
 
+// Browse all products
+router.get('/products', async (req, res) => {
+  try {
+    const products = await Product.find().populate('shop');
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 module.exports = router;
