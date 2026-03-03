@@ -1,70 +1,124 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middleware/auth');
-const roleMiddleware = require('../middleware/role');
 
 const Shop = require('../models/Shop');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 
-// 🔹 Create shop
-router.post('/', authMiddleware, roleMiddleware('shop'), async (req, res) => {
+// Create shop
+router.post('/', async (req, res) => {
   try {
-    // Vérifier si le shop existe déjà
-    const existingShop = await Shop.findOne({ owner: req.user.id });
+    const { owner } = req.body; // ⚠️ maintenant on le prend du body
+
+    const existingShop = await Shop.findOne({ owner });
     if (existingShop) {
       return res.status(400).json({ message: "Shop déjà existant" });
     }
 
     const newShop = new Shop({
       ...req.body,
-      owner: req.user.id,
-      status: 'pending' // important pour validation admin
+      owner,
+      status: 'pending'
     });
 
     await newShop.save();
-
     res.status(201).json(newShop);
 
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
-// 🔹 Profile shop
-router.put('/profile', authMiddleware, roleMiddleware('shop'), async (req, res) => {
-  const shop = await Shop.findOneAndUpdate({ owner: req.user.id }, req.body, { new: true });
-  res.json(shop);
+
+// Update shop profile
+router.put('/profile/:ownerId', async (req, res) => {
+  try {
+    const shop = await Shop.findOneAndUpdate(
+      { owner: req.params.ownerId },
+      req.body,
+      { new: true }
+    );
+
+    res.json(shop);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// 🔹 CRUD products
-router.post('/products', authMiddleware, roleMiddleware('shop'), async (req, res) => {
-  const shop = await Shop.findOne({ owner: req.user.id });
-  const product = new Product({ ...req.body, shop: shop._id });
-  await product.save();
-  res.json(product);
+// Create product
+router.post('/products/:ownerId', async (req, res) => {
+  try {
+    const shop = await Shop.findOne({ owner: req.params.ownerId });
+
+    if (!shop) return res.status(404).json({ message: "Shop non trouvé" });
+
+    const product = new Product({ ...req.body, shop: shop._id });
+    await product.save();
+
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-router.get('/products', authMiddleware, roleMiddleware('shop'), async (req, res) => {
-  const shop = await Shop.findOne({ owner: req.user.id });
-  const products = await Product.find({ shop: shop._id });
-  res.json(products);
+// Get products
+router.get('/products/:ownerId', async (req, res) => {
+  try {
+    const shop = await Shop.findOne({ owner: req.params.ownerId });
+
+    if (!shop) return res.status(404).json({ message: "Shop non trouvé" });
+
+    const products = await Product.find({ shop: shop._id });
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-router.put('/products/:id', authMiddleware, roleMiddleware('shop'), async (req,res)=>{
-  const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new:true });
-  res.json(product);
+// Update product
+router.put('/products/:id', async (req, res) => {
+  try {
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-router.delete('/products/:id', authMiddleware, roleMiddleware('shop'), async (req,res)=>{
-  await Product.findByIdAndDelete(req.params.id);
-  res.json({ message: 'Produit supprimé' });
+// Delete product
+router.delete('/products/:id', async (req, res) => {
+  try {
+    await Product.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Produit supprimé' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// 🔹 Orders for shop
-router.get('/orders', authMiddleware, roleMiddleware('shop'), async (req,res)=>{
-  const shop = await Shop.findOne({ owner: req.user.id });
-  const orders = await Order.find({ 'products.product': { $in: await Product.find({shop: shop._id}).distinct('_id') } }).populate('buyer').populate('products.product');
-  res.json(orders);
+// Orders for shop
+router.get('/orders/:ownerId', async (req, res) => {
+  try {
+    const shop = await Shop.findOne({ owner: req.params.ownerId });
+
+    if (!shop) return res.status(404).json({ message: "Shop non trouvé" });
+
+    const productIds = await Product.find({ shop: shop._id }).distinct('_id');
+
+    const orders = await Order.find({
+      'products.product': { $in: productIds }
+    })
+      .populate('buyer')
+      .populate('products.product');
+
+    res.json(orders);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;
