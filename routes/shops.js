@@ -7,7 +7,7 @@ const Shop = require('../models/Shop');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 
-// 🔹 Create shop
+//  Create shop
 router.post('/', authMiddleware, roleMiddleware('shop'), async (req, res) => {
   try {
     // Vérifier si le shop existe déjà
@@ -30,13 +30,13 @@ router.post('/', authMiddleware, roleMiddleware('shop'), async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-// 🔹 Profile shop
+// Profile shop
 router.put('/profile', authMiddleware, roleMiddleware('shop'), async (req, res) => {
   const shop = await Shop.findOneAndUpdate({ owner: req.user.id }, req.body, { new: true });
   res.json(shop);
 });
 
-// 🔹 CRUD products
+// CRUD products
 router.post('/products', authMiddleware, roleMiddleware('shop'), async (req, res) => {
   const shop = await Shop.findOne({ owner: req.user.id });
   const product = new Product({ ...req.body, shop: shop._id });
@@ -60,7 +60,7 @@ router.delete('/products/:id', authMiddleware, roleMiddleware('shop'), async (re
   res.json({ message: 'Produit supprimé' });
 });
 
-// 🔹 Orders for shop
+//  Orders for shop
 router.get('/orders', authMiddleware, roleMiddleware('shop'), async (req,res)=>{
   const shop = await Shop.findOne({ owner: req.user.id });
   const orders = await Order.find({ 'products.product': { $in: await Product.find({shop: shop._id}).distinct('_id') } }).populate('buyer').populate('products.product');
